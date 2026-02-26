@@ -46,13 +46,11 @@ class LinearClassifier(object):
         if self.W is None:
             # lazily initialize W
             self.W = 0.001 * np.random.randn(dim, num_classes)
-
         # Run stochastic gradient descent to optimize W
         loss_history = []
         for it in range(num_iters):
             X_batch = None
             y_batch = None
-
             #########################################################################
             # TODO:                                                                 #
             # Sample batch_size elements from the training data and their           #
@@ -64,11 +62,12 @@ class LinearClassifier(object):
             # Hint: Use np.random.choice to generate indices. Sampling with         #
             # replacement is faster than sampling without replacement.              #
             #########################################################################
-
-
+            sample_idx = np.random.choice(num_train, batch_size, replace=False)
+            X_batch, y_batch = X[sample_idx], y[sample_idx]
             # evaluate loss and gradient
             loss, grad = self.loss(X_batch, y_batch, reg)
             loss_history.append(loss)
+            self.W -= learning_rate * grad
 
             # perform parameter update
             #########################################################################
@@ -101,7 +100,7 @@ class LinearClassifier(object):
         # TODO:                                                                   #
         # Implement this method. Store the predicted labels in y_pred.            #
         ###########################################################################
-
+        y_pred = np.argmax(X @ self.W, axis=1)
         return y_pred
 
     def loss(self, X_batch, y_batch, reg):
