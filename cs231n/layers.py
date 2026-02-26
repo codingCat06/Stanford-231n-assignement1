@@ -27,7 +27,7 @@ def affine_forward(x, w, b):
     # TODO: Implement the affine forward pass. Store the result in out. You   #
     # will need to reshape the input into rows.                               #
     ###########################################################################
-
+    out = x.reshape(x.shape[0], -1).dot(w) + b
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -56,7 +56,9 @@ def affine_backward(dout, cache):
     ###########################################################################
     # TODO: Implement the affine backward pass.                               #
     ###########################################################################
-
+    dx = dout.dot(w.T).reshape(x.shape)
+    dw = x.reshape(x.shape[0], -1).T.dot(dout)
+    db = dout.sum(axis=0)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -78,7 +80,7 @@ def relu_forward(x):
     ###########################################################################
     # TODO: Implement the ReLU forward pass.                                  #
     ###########################################################################
-
+    out = np.maximum(0, x)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -101,7 +103,7 @@ def relu_backward(dout, cache):
     ###########################################################################
     # TODO: Implement the ReLU backward pass.                                 #
     ###########################################################################
-
+    dx = dout * (x > 0)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -715,7 +717,16 @@ def softmax_loss(x, y):
     # TODO: Copy over your solution from A1.
     ###########################################################################
 
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
+    # Compute the softmax probabilities
+    shifted_x = x - np.max(x, axis=1, keepdims=True)
+    exp_x = np.exp(shifted_x)
+    exp_sum = np.sum(exp_x, axis=1, keepdims=True)
+    probs = exp_x / exp_sum
+
+    # Stable softmax loss (avoids log(0) underflow)
+    N = x.shape[0]
+    loss = np.sum(-shifted_x[np.arange(N), y] + np.log(exp_sum[:, 0])) / N
+    dx = probs.copy()
+    dx[np.arange(N), y] -= 1
+    dx /= N
     return loss, dx

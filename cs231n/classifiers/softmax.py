@@ -17,11 +17,11 @@ def softmax_loss_naive(W, X, y, reg):
 
         # compute the probabilities in numerically stable way
         scores -= np.max(scores)
-        p = np.exp(scores)
-        p /= p.sum()  # normalize
-        logp = np.log(p)
+        exp_scores = np.exp(scores)
+        exp_sum = np.sum(exp_scores)
+        p = exp_scores / exp_sum
 
-        loss -= logp[y[i]]  # negative log probability is the loss
+        loss += -scores[y[i]] + np.log(exp_sum)
         p[y[i]] -= 1
         dW += X[i][:,None] * p[None,:]
     # normalized hinge loss plus regularization
@@ -55,11 +55,11 @@ def softmax_loss_vectorized(W, X, y, reg):
 
     # compute the probabilities in numerically stable way
     scores -= np.max(scores, axis = 1)[:,None] # (N)
-    p = np.exp(scores) # (N,C)
-    p /= p.sum(axis = 1)[:,None]  # normalize
-    logp = np.log(p)
+    exp_scores = np.exp(scores) # (N,C)
+    exp_sum = np.sum(exp_scores, axis=1, keepdims=True)
+    p = exp_scores / exp_sum  # normalize
     arr = np.arange(num_train)
-    loss -= logp[arr,y].sum()  # negative log probability is the loss
+    loss += np.sum(-scores[arr, y] + np.log(exp_sum[:, 0]))
     p[arr,y] -= 1
     dW += X.T @ p
     loss = loss / num_train + reg * np.sum(W * W)
